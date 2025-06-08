@@ -156,9 +156,10 @@ def saldo():
         for account in accounts:
             print(f"Kontonavn: {account[2]}, Saldo: {account[3]}, Kontonummer: {account[4]}")
         linje()
-        input("Trykk Enter for å fortsette...")  # Venter på brukerens inndata før å gå tilbake til hjemmenyen
+        input("Trykk Enter for å fortsette...")  
 
-# Hovedprogramløkke
+
+
 login_loop = True
 while login_loop:
     user_input = ui()
