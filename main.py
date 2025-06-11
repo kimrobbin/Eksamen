@@ -178,8 +178,8 @@ def overforing():
         send_money = int(send_money)
         print("Hvor skal du sende pengene: ")
         
-        sql_statement = ("""SELECT * FROM accounts WHERE
-                         user_id = (SELECT id FROM users WHERE username = %s)""")
+        sql_statement = ("""SELECT * FROM accounts 
+                         WHERE user_id = (SELECT id FROM users WHERE username = %s)""")
         mycursor.execute(sql_statement, (logged_in_user,))
         accounts = mycursor.fetchall()
         
@@ -199,8 +199,8 @@ def overforing():
         """
         mycursor.execute(update, (send_money, konto_valg, ))
         
-        print(f"Overført {send_money} kr til konto {konto_valg}")
         dbconn.commit()
+        print(f"Overført {send_money} kr til konto {konto_valg}")
             
         enter()
     else:
