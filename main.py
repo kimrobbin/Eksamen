@@ -45,6 +45,9 @@ def hash_password(password):
 def linje():
     print("--------------------------------------------------")
 
+def enter():
+    input("Trykk Enter for å fortsette...")  
+
 # Hovedmeny
 
 
@@ -72,8 +75,8 @@ def login():
     hased_password = hash_password(password)
 
     # Sjekker om brukernavn og passord matcher i databasen
-    sql_statement = (
-        "SELECT * FROM users WHERE username = %s AND password = %s")
+    sql_statement = ( """SELECT * FROM users
+                         WHERE username = %s AND password = %s""")
     mycursor.execute(sql_statement, (username, hased_password))
     mycursor.fetchall()
 
@@ -81,7 +84,7 @@ def login():
         linje()
         print("Innlogging vellykket!")
         linje
-        input("Trykk Enter for å fortsette...")  # Venter på brukerens inndata før å gå videre
+        enter()# Venter på brukerens inndata før å gå videre
         return username
     else:
         print("Feil brukernavn eller passord.")
@@ -103,6 +106,8 @@ def create_user():
     mycursor.execute(sql_statement, (username, hased_password))
     dbconn.commit()
 
+
+        
 # UI etter inlogging
 
 
@@ -139,7 +144,8 @@ def opprett_konto():
     dbconn.commit()
     
     print("Konto opprettet!")
-    input("Trykk Enter for å fortsette...")  # Venter på brukerens inndata før å gå tilbake til hjemmenyen
+    enter()
+    
 # sjekke saldo 
 def saldo():
     os.system("cls")
@@ -147,7 +153,8 @@ def saldo():
     print("Sjekk saldo")
     linje()
     # Henter brukerens kontoer
-    sql_statement = ("SELECT * FROM accounts WHERE user_id = (SELECT id FROM users WHERE username = %s)")
+    sql_statement = ("""SELECT * FROM accounts WHERE
+                     user_id = (SELECT id FROM users WHERE username = %s)""")
     mycursor.execute(sql_statement, (logged_in_user,))
     accounts = mycursor.fetchall()
     
@@ -156,7 +163,50 @@ def saldo():
         for account in accounts:
             print(f"Kontonavn: {account[2]}, Saldo: {account[3]}, Kontonummer: {account[4]}")
         linje()
-        input("Trykk Enter for å fortsette...")  # Venter på brukerens inndata før å gå tilbake til hjemmenyen
+        enter()
+
+
+def overforing():
+    os.system("cls")
+    print("OVERFØRING AV PENGER")
+    linje()
+    send_money = input("Hvor mye vil du overføre: ")
+    linje()
+    
+    if send_money.isnumeric(): # Sjekker om det er et tall
+        # print("DEt er et tall!")
+        send_money = int(send_money)
+        print("Hvor skal du sende pengene: ")
+        
+        sql_statement = ("""SELECT * FROM accounts WHERE
+                         user_id = (SELECT id FROM users WHERE username = %s)""")
+        mycursor.execute(sql_statement, (logged_in_user,))
+        accounts = mycursor.fetchall()
+        
+        if accounts:
+            for  account in accounts:
+                print(f". Kontonavn: {account[2]}, Kontonummer: {account[4]}")
+        
+        konto_valg = input("Skriv in kontonummer: ")
+        
+        
+        
+      
+        update = """
+        UPDATE accounts SET saldo = saldo + %s
+        WHERE konto_nummer = %s           
+        
+        """
+        mycursor.execute(update, (send_money, konto_valg, ))
+        
+        print(f"Overført {send_money} kr til konto {konto_valg}")
+        dbconn.commit()
+            
+        enter()
+    else:
+        print("Du må skrive inn et gyldig tall")  
+        enter()
+    
 
 # Hovedprogramløkke
 login_loop = True
@@ -176,11 +226,11 @@ while login_loop:
                 home_input = home(logged_in_user)
 
                 if home_input == "1":
-                    print("Sjekker saldo")
+                   
                     saldo()
 
                 elif home_input == "2":
-                    print("Overfører penger")
+                    overforing()
 
                 elif home_input == "3":
                     print("Oppretter konto")
@@ -188,6 +238,7 @@ while login_loop:
 
                 elif home_input == "4":
                     print("Logger ut...")
+                    
 
                     login_loop = True
                     logged_in = False
