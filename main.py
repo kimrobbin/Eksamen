@@ -88,6 +88,7 @@ def login():
         return username
     else:
         print("Feil brukernavn eller passord.")
+        enter()
 
 # Opptetelse av nye bruker
 
@@ -119,7 +120,8 @@ def home(username):
     print("1. Sjekk Saldo")
     print("2. Overfør penger")
     print("3. Opprett konto")
-    print("4. Logg ut")
+    print("4. Slett konto")
+    print("5. Logg ut")
 
     home_input = input("Velg et alternativ: ")
     return home_input
@@ -131,7 +133,7 @@ def opprett_konto():
     print("Opprett konto")
     linje()
     konto_navn = input("Skriv inn kontonavn: ")
-    
+    start_penger = 5000
     #  tilfeldig kontonummer 
     konto_nummer1 = random.randint(1000,9999)
     konto_nummer2 = random.randint(10,99)
@@ -139,13 +141,42 @@ def opprett_konto():
     
     # Kombiner kontonummerne
     konto_nummer = f"{konto_nummer1}.{konto_nummer2}.{konto_nummer3}"
-    sql_statement = ("INSERT INTO accounts (user_id, account_name, konto_nummer) VALUES ((SELECT id FROM users WHERE username = %s), %s, %s)")
-    mycursor.execute(sql_statement, (logged_in_user, konto_navn, konto_nummer))
+    sql_statement = ("INSERT INTO accounts (user_id, account_name, konto_nummer, saldo) VALUES ((SELECT id FROM users WHERE username = %s), %s, %s, %s)")
+    mycursor.execute(sql_statement, (logged_in_user, konto_navn, konto_nummer, start_penger))
     dbconn.commit()
+    
     
     print("Konto opprettet!")
     enter()
     
+def slett_konto():
+    os.system("cls")
+    print("Hvilken konto vil du slette?")
+    linje()
+    sql_statement = """SELECT * FROM accounts 
+                      WHERE user_id = (SELECT id FROM users WHERE username = %s)"""
+    mycursor.execute(sql_statement, (logged_in_user,))
+    accounts = mycursor.fetchall()
+
+    for account in accounts:
+        print(f"Kontonavn: {account[2]}, Kontonummer: {account[4]}")
+        linje()
+            
+    konto_nummer = input("Skriv in kontonummer: ")
+    sql = (""" DELETE FROM accounts WHERE konto_nummer = %s
+                AND user_id= (SELECT id FROM users WHERE username =%s)
+            """)
+    mycursor.execute(sql, (konto_nummer, logged_in_user))
+    dbconn.commit()
+    
+    
+    if mycursor.rowcount > 0:
+        print("Konto ble slettet: ")
+        enter()
+    else:
+        print("Fant ikke noen konto")
+        enter()
+        
 # sjekke saldo 
 def saldo():
     os.system("cls")
@@ -164,7 +195,9 @@ def saldo():
             print(f"Kontonavn: {account[2]}, Saldo: {account[3]}, Kontonummer: {account[4]}")
         linje()
         enter()
-
+    else:
+        print("Du har ingen kontoer til å sjekke saldo på")
+        enter()
 
 def overforing():
     os.system("cls")
@@ -189,16 +222,14 @@ def overforing():
         
         konto_valg = input("Skriv in kontonummer: ")
         
-        
-        
-      
-        update = """
+        update_send = """
         UPDATE accounts SET saldo = saldo + %s
         WHERE konto_nummer = %s           
         
         """
-        mycursor.execute(update, (send_money, konto_valg, ))
         
+        
+        mycursor.execute(update_send, (send_money, konto_valg, ))
         dbconn.commit()
         print(f"Overført {send_money} kr til konto {konto_valg}")
             
@@ -235,8 +266,11 @@ while login_loop:
                 elif home_input == "3":
                     print("Oppretter konto")
                     opprett_konto()
-
+                    
                 elif home_input == "4":
+                    slett_konto()
+
+                elif home_input == "5":
                     print("Logger ut...")
                     
 
